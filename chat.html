@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Spil</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+        }
+        canvas {
+            border: 1px solid #fff;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+</body>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const gridSize = 20;
+const tileCount = canvas.width / gridSize;
+
+let snake = [{ x: 10, y: 10 }];
+let direction = { x: 0, y: 0 };
+let apple = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
+let score = 0;
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Tegn æblet
+    ctx.fillStyle = 'red';
+    ctx.fillRect(apple.x * gridSize, apple.y * gridSize, gridSize, gridSize);
+
+    // Tegn slangen
+    snake.forEach(segment => {
+        ctx.fillStyle = 'lime';
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+    });
+
+    // Flyt slangen
+    const newHead = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+    snake.unshift(newHead);
+
+    // Tjek om slangen spiser æblet
+    if (newHead.x === apple.x && newHead.y === apple.y) {
+        score++;
+        apple = { x: Math.floor(Math.random() * tileCount), y: Math.floor(Math.random() * tileCount) };
+    } else {
+        snake.pop();
+    }
+
+    // Tjek om slangen rammer væggen eller sig selv
+    if (newHead.x < 0 || newHead.x >= tileCount || newHead.y < 0 || newHead.y >= tileCount || checkCollision(newHead)) {
+        resetGame();
+    }
+
+    // requestAnimationFrame(draw);
+}
+
+function checkCollision(head) {
+    for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function resetGame() {
+    snake = [{ x: 10, y: 10 }];
+    direction = { x: 0, y: 0 };
+    score = 0;
+}
+
+document.addEventListener('keydown', event => {
+    switch (event.key) {
+        case 'ArrowUp':
+            if (direction.y === 0) direction = { x: 0, y: -1 };
+            break;
+        case 'ArrowDown':
+            if (direction.y === 0) direction = { x: 0, y: 1 };
+            break;
+        case 'ArrowLeft':
+            if (direction.x === 0) direction = { x: -1, y: 0 };
+            break;
+        case 'ArrowRight':
+            if (direction.x === 0) direction = { x: 1, y: 0 };
+            break;
+    }
+});
+
+// draw();
+setInterval(draw, 200)
+</script>
+</html>

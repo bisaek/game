@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Game</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+        }
+        canvas {
+            border: 1px solid #000;
+            display: block;
+            margin: 0 auto;
+            background-color: #f7f7f7;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chrome Dino Game</h1>
+    <label id="score"></label>
+    <label id="highscore"></label>
+    <canvas id="gameCanvas" width="600"  height="200"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const score = document.getElementById("score")
+        const robot = new Image()
+        robot.src = "robot.png"
+        const cactus = new Image()
+        cactus.src = "cactus.png"
+        const ball = new Image()
+        ball.src = "ball.png"
+        const highscore = document.getElementById("highscore")
+
+
+        let dino = {
+            x: 50,
+            y: 160,
+            width: 30,
+            height: 40,
+            dy: 0,
+            gravity: 0.6,
+            jumpPower: -10,
+            isJumping: false
+        };
+        let obstacles = [];
+        let frames = 0;
+        let gameSpeed = 4;
+
+        let distance = 1
+
+        let ducked = false
+
+        function updateDino() {
+            if (dino.isJumping) {
+                dino.dy += dino.gravity;
+                dino.y += dino.dy;
+
+                if (dino.y > 200 - (dino.height)){
+                    dino.y = 200 - (dino.height)
+                    dino.dy = 0;
+                    dino.isJumping = false;
+                }
+            }
+                
+        }
+
+        function drawDino() {
+            ctx.fillStyle = 'black';
+            ctx.drawImage(robot, dino.x, dino.y, dino.width, dino.height);
+            console.log(dino.height)
+            
+        }
+
+        function createObstacle() {
+            if(Math.random() >= 0.15){
+                obstacles.push({
+                    x: canvas.width,
+                    y: 170,
+                    width: 20,
+                    height: 30,
+                    image: cactus
+                });
+            } else {
+                obstacles.push({
+                    x: canvas.width,
+                    y: 140,
+                    width: 30,
+                    height: 30,
+                    image: ball
+                });
+            }
+        }
+
+        function updateObstacles() {
+            for (let i = 0; i < obstacles.length; i++) {
+                // if(obstacles[i].image == ball){
+                //     obstacles[i].x -= gameSpeed * 2;
+                // } else {
+                    obstacles[i].x -= gameSpeed;
+                // }
+                
+
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function drawObstacles() {
+            ctx.fillStyle = 'red';
+            for (let i = 0; i < obstacles.length; i++) {
+                ctx.drawImage(obstacles[i].image, obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+            }
+        }
+
+        function checkCollision() {
+            for (let i = 0; i < obstacles.length; i++) {
+                let obs = obstacles[i];
+                if (
+                    dino.x < obs.x + obs.width &&
+                    dino.x + dino.width > obs.x &&
+                    dino.y < obs.y + obs.height &&
+                    dino.y + dino.height > obs.y
+                ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // gameSpeed += 0.01
+            frames++;
+            score.innerText = "score: " + frames
+            if(frames > localStorage.getItem("highscore")) localStorage.setItem("highscore", frames)
+            highscore.innerText = "highscore: " + localStorage.getItem("highscore")
+            if (frames == distance) {
+                console.log(distance)
+                distance += Math.round(Math.random() * 75) + 25
+                createObstacle();
+            }
+
+            updateDino();
+            updateObstacles();
+            
+            drawDino();
+            drawObstacles();
+
+            if (checkCollision()) {
+                alert("Game Over!");
+                document.location.reload();
+            } else {
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (['Space', 'ArrowUp', 'KeyW'].includes(e.code) && !dino.isJumping) {
+                dino.isJumping = true;
+                dino.dy = dino.jumpPower;
+            } else if(e.code == "Escape"){
+                alert("Press Space to start")
+            } else if(['ArrowDown', 'KeyS'].includes(e.code) && !ducked){
+                dino.height = 20
+                dino.y += 20
+                ducked = true
+            }
+        });
+        document.addEventListener('keyup', (e) => {
+            if(['ArrowDown', 'KeyS'].includes(e.code) && ducked){
+                dino.height = 40
+                dino.y -= 20
+                ducked = false
+            }
+        })
+        
+
+        gameLoop();
+    </script>
+</body>
+</html>
